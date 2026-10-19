@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ConnectHub — Sistema de Gerenciamento de Cadastros com CRUD completo, dashboard e persistência real de dados.">
+  <title>ConnectHub — Gerenciamento de Cadastros</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <div class="sidebar-cabecalho">
+        <div class="logo">
+          <span class="logo-marca"><i data-lucide="waypoints"></i></span>
+          <div class="logo-texto">
+            <strong>ConnectHub</strong>
+            <small>Gerenciamento de Cadastros</small>
+          </div>
+        </div>
+        <button class="icone-botao sidebar-fechar" id="botao-fechar-sidebar" aria-label="Fechar menu">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#/dashboard" class="nav-item ativo" data-vista="dashboard">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="#/cadastros" class="nav-item" data-vista="cadastros">
+          <i data-lucide="users"></i><span>Cadastros</span>
+        </a>
+        <a href="#/sobre" class="nav-item" data-vista="sobre">
+          <i data-lucide="info"></i><span>Sobre o Projeto</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-rodape">
+        <div class="status-mini" id="status-mini-banco">
+          <span class="ponto ponto-cinza" id="status-mini-ponto"></span>
+          <span id="status-mini-texto">Verificando banco…</span>
+        </div>
+        <p class="versao">v1.0 · CRUD + Vercel Functions</p>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+
+    <!-- ===================== CONTEÚDO ===================== -->
+    <div class="principal">
+
+      <header class="topbar">
+        <div class="topbar-esquerda">
+          <button class="icone-botao botao-menu" id="botao-menu" aria-label="Abrir menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="topbar-titulos">
+            <h1 id="titulo-pagina">Dashboard</h1>
+            <p id="subtitulo-pagina">Visão geral dos cadastros do sistema</p>
+          </div>
+        </div>
+        <div class="topbar-direita">
+          <span class="data-atual" id="data-atual">—</span>
+          <span class="selo selo-conexao verificando" id="selo-conexao" title="Indicador de conexão com o banco de dados">
+            <span class="ponto"></span><span id="selo-conexao-texto">Verificando…</span>
+          </span>
+          <button class="botao botao-primario" id="botao-novo-cadastro">
+            <i data-lucide="plus"></i><span>Novo Cadastro</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="conteudo">
+
+        <!-- ============ VISTA: DASHBOARD ============ -->
+        <section class="vista ativa" id="vista-dashboard" aria-label="Dashboard">
+
+          <div class="grade-kpis">
+            <article class="card kpi">
+              <div class="kpi-info">
+                <h3>Total de cadastros</h3>
+                <p class="kpi-valor carregando" id="kpi-total">—</p>
+                <p class="kpi-dica">Registros armazenados no banco de dados</p>
+              </div>
+              <span class="kpi-icone kpi-icone-azul"><i data-lucide="users"></i></span>
+            </article>
+
+            <article class="card kpi">
+              <div class="kpi-info">
+                <h3>Cadastros recentes</h3>
+                <p class="kpi-valor carregando" id="kpi-recentes">—</p>
+                <p class="kpi-dica">Criados nos últimos 7 dias</p>
+              </div>
+              <span class="kpi-icone kpi-icone-roxo"><i data-lucide="user-plus"></i></span>
+            </article>
+
+            <article class="card kpi">
+              <div class="kpi-info">
+                <h3>Status da aplicação</h3>
+                <p class="kpi-valor kpi-status carregando" id="kpi-status">—</p>
+                <p class="kpi-dica" id="kpi-status-dica">Conexão com o banco de dados</p>
+              </div>
+              <span class="kpi-icone kpi-icone-verde"><i data-lucide="activity"></i></span>
+            </article>
+          </div>
+
+          <div class="card cartao-recentes">
+            <div class="cartao-cabecalho">
+              <div>
+                <h2>Cadastros recentes</h2>
+                <p>Os 5 registros mais recentes armazenados no banco</p>
+              </div>
+              <a class="botao botao-fantasma botao-pequeno" href="#/cadastros">
+                Ver todos <i data-lucide="arrow-right"></i>
+              </a>
+            </div>
+
+            <ul class="lista-recentes" id="lista-recentes"></ul>
+
+            <div class="esqueleto-lista" id="esqueleto-recentes" hidden>
+              <div class="linha-esqueleto"><span class="esqueleto esqueleto-avatar"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span></div>
+              <div class="linha-esqueleto"><span class="esqueleto esqueleto-avatar"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span></div>
+              <div class="linha-esqueleto"><span class="esqueleto esqueleto-avatar"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span></div>
+            </div>
+
+            <div class="estado-vazio" id="vazio-recentes" hidden>
+              <span class="vazio-icone"><i data-lucide="users"></i></span>
+              <h3>Nenhum cadastro por aqui ainda</h3>
+              <p>Crie o primeiro registro para começar a acompanhar as estatísticas do sistema.</p>
+              <button class="botao botao-primario" data-abrir-criacao>
+                <i data-lucide="plus"></i> Criar primeiro cadastro
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: CADASTROS ============ -->
+        <section class="vista" id="vista-cadastros" aria-label="Gerenciamento de cadastros">
+
+          <div class="barra-ferramentas">
+            <div class="campo-busca">
+              <i data-lucide="search"></i>
+              <input id="campo-busca" type="search" placeholder="Pesquisar por nome, e-mail ou cidade…" autocomplete="off">
+            </div>
+            <div class="ferramentas-direita">
+              <label class="seletor-envolucro" for="seletor-ordenacao">
+                <i data-lucide="arrow-up-down"></i>
+                <select id="seletor-ordenacao">
+                  <option value="criado_em:desc" selected>Data de cadastro (mais recentes)</option>
+                  <option value="criado_em:asc">Data de cadastro (mais antigas)</option>
+                  <option value="nome:asc">Nome (A – Z)</option>
+                  <option value="nome:desc">Nome (Z – A)</option>
+                </select>
+              </label>
+              <button class="icone-botao" id="botao-atualizar" title="Atualizar listagem" aria-label="Atualizar listagem">
+                <i data-lucide="refresh-cw"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="card cartao-tabela">
+            <div class="tabela-envolucro" id="tabela-envolucro">
+              <table class="tabela">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Cidade</th>
+                    <th>Data de cadastro</th>
+                    <th class="coluna-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="corpo-tabela"></tbody>
+              </table>
+
+              <div class="esqueleto-tabela" id="esqueleto-tabela" hidden>
+                <div class="linha-esqueleto"><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span></div>
+                <div class="linha-esqueleto"><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span></div>
+                <div class="linha-esqueleto"><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span></div>
+                <div class="linha-esqueleto"><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-linha"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span><span class="esqueleto esqueleto-curto"></span></div>
+              </div>
+            </div>
+
+            <!-- Lista em cartões (visível apenas em telas pequenas) -->
+            <ul class="lista-cartoes" id="lista-cartoes"></ul>
+
+            <div class="estado-vazio" id="estado-vazio-cadastros" hidden></div>
+
+            <div class="rodape-tabela">
+              <p id="info-paginacao">—</p>
+              <div class="paginacao">
+                <button class="botao botao-fantasma botao-pequeno" id="botao-pagina-anterior">
+                  <i data-lucide="chevron-left"></i> Anterior
+                </button>
+                <span id="rotulo-pagina">Página 1 de 1</span>
+                <button class="botao botao-fantasma botao-pequeno" id="botao-pagina-seguinte">
+                  Próxima <i data-lucide="chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: SOBRE ============ -->
+        <section class="vista" id="vista-sobre" aria-label="Sobre o projeto">
+          <article class="sobre-artigo">
+
+            <div class="card sobre-card">
+              <span class="sobre-icone sobre-icone-azul"><i data-lucide="target"></i></span>
+              <h2>Objetivo do projeto</h2>
+              <p>
+                O ConnectHub é um painel administrativo desenvolvido com finalidade acadêmica para demonstrar,
+                de ponta a ponta, como construir um sistema de gerenciamento de cadastros (CRUD) com arquitetura
+                profissional e <strong>persistência real de dados</strong>. O projeto cobre desde a interface
+                responsiva até as funções de servidor e o banco de dados, seguindo boas práticas de separação de
+                responsabilidades.
+              </p>
+              <p>
+                Todas as informações exibidas — contadores do dashboard, listagens, resultados de busca e datas —
+                são calculadas exclusivamente a partir dos registros efetivamente armazenados no banco de dados.
+                Não existe nenhum dado fictício simulado no código da interface: se o banco está vazio, os
+                indicadores mostram zero e a tela apresenta um estado vazio orientado ao usuário.
+              </p>
+            </div>
+
+            <div class="card sobre-card">
+              <span class="sobre-icone sobre-icone-roxo"><i data-lucide="layers"></i></span>
+              <h2>Tecnologias utilizadas</h2>
+              <div class="grade-tecnologias">
+                <div class="item-tecnologia">
+                  <i data-lucide="code"></i>
+                  <div><strong>HTML5</strong><p>Estrutura semântica das três telas, modais acessíveis e componentes reutilizáveis.</p></div>
+                </div>
+                <div class="item-tecnologia">
+                  <i data-lucide="palette"></i>
+                  <div><strong>CSS3</strong><p>Tema Modern Dark Dashboard com variáveis customizadas, Grid e Flexbox, animações leves e layout responsivo.</p></div>
+                </div>
+                <div class="item-tecnologia">
+                  <i data-lucide="braces"></i>
+                  <div><strong>JavaScript</strong><p>Aplicação sem frameworks: roteamento por hash, requisições fetch, máscara de telefone, validação e toasts.</p></div>
+                </div>
+                <div class="item-tecnologia">
+                  <i data-lucide="server"></i>
+                  <div><strong>Vercel Functions</strong><p>Funções serverless em Node.js responsáveis pela API REST (rota /api) que executa as operações no banco.</p></div>
+                </div>
+                <div class="item-tecnologia">
+                  <i data-lucide="database"></i>
+                  <div><strong>PostgreSQL · Neon</strong><p>Banco relacional gerenciado, integração oficial do Marketplace da Vercel, usado em produção via DATABASE_URL.</p></div>
+                </div>
+                <div class="item-tecnologia">
+                  <i data-lucide="hard-drive"></i>
+                  <div><strong>SQLite (dev local)</strong><p>Driver de desenvolvimento sem configuração, com exatamente a mesma interface do driver Postgres.</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card sobre-card">
+              <span class="sobre-icone sobre-icone-azul"><i data-lucide="database"></i></span>
+              <h2>Como o CRUD funciona</h2>
+              <div class="grade-crud">
+                <div class="item-crud">
+                  <span class="badge-crud badge-create">Create</span>
+                  <p>
+                    O botão “Novo Cadastro” abre um modal que valida os campos (nome completo, e-mail, telefone com
+                    máscara e cidade) e envia os dados por <code>POST /api/cadastros</code>. O servidor revalida tudo,
+                    impede e-mails duplicados e grava o registro com ID (UUID) e data de cadastro gerados
+                    automaticamente pelo banco.
+                  </p>
+                </div>
+                <div class="item-crud">
+                  <span class="badge-crud badge-read">Read</span>
+                  <p>
+                    A tabela e o dashboard consomem <code>GET /api/cadastros</code> e <code>GET /api/estatisticas</code>.
+                    A busca por nome, e-mail ou cidade, a ordenação por nome ou data e a paginação são executadas
+                    diretamente no banco de dados — não no navegador — garantindo desempenho e indicadores reais.
+                  </p>
+                </div>
+                <div class="item-crud">
+                  <span class="badge-crud badge-update">Update</span>
+                  <p>
+                    O ícone de edição recarrega o registro (<code>GET /api/cadastros/:id</code>), preenche o modal e
+                    envia as alterações por <code>PUT /api/cadastros/:id</code>. O e-mail continua único e a listagem
+                    é atualizada imediatamente após a resposta do servidor.
+                  </p>
+                </div>
+                <div class="item-crud">
+                  <span class="badge-crud badge-delete">Delete</span>
+                  <p>
+                    A exclusão exige confirmação em um modal próprio com destaque vermelho. Confirmada, envia
+                    <code>DELETE /api/cadastros/:id</code> e o registro é removido do banco. Qualquer falha é
+                    reportada por um toast de erro e a linha permanece na tela.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card sobre-card">
+              <span class="sobre-icone sobre-icone-verde"><i data-lucide="shield-check"></i></span>
+              <h2>Arquitetura e persistência de dados</h2>
+              <p>
+                A aplicação é organizada em camadas independentes. A interface nunca fala com o banco diretamente:
+                ela apenas consome a API REST, que por sua vez delega toda leitura e escrita à camada de acesso a
+                dados (o padrão <em>repositório</em>). Assim, trocar o provedor de armazenamento não exige alterar
+                nenhuma linha do frontend.
+              </p>
+              <div class="diagrama-camadas">
+                <div class="camada"><i data-lucide="monitor"></i><div><strong>Interface</strong><span>public/ · HTML + CSS + JS</span></div></div>
+                <span class="conector-camada">↓</span>
+                <div class="camada"><i data-lucide="server"></i><div><strong>API REST</strong><span>Vercel Functions · Node.js</span></div></div>
+                <span class="conector-camada">↓</span>
+                <div class="camada"><i data-lucide="layers"></i><div><strong>Camada de acesso a dados</strong><span>api/_lib · padrão repositório</span></div></div>
+                <span class="conector-camada">↓</span>
+                <div class="camada camada-banco"><i data-lucide="database"></i><div><strong>Banco de dados</strong><span>Neon Postgres (produção) · SQLite (dev)</span></div></div>
+              </div>
+              <p>
+                <strong>Por que arquivos locais não servem na Vercel?</strong> As funções serverless rodam em um
+                ambiente efêmero: o sistema de arquivos é somente leitura (exceto <code>/tmp</code>, descartado a cada
+                execução) e cada requisição pode ser atendida por uma instância diferente. Gravar em disco, usar
+                arrays em memória ou <code>localStorage</code> — que vive apenas no navegador de cada visitante —
+                significaria perder dados silenciosamente. Por isso a persistência é feita em um banco gerenciado:
+                o <strong>Neon Postgres</strong>, conectado pela variável de ambiente <code>DATABASE_URL</code>.
+              </p>
+            </div>
+
+            <div class="card sobre-card">
+              <span class="sobre-icone sobre-icone-roxo"><i data-lucide="rocket"></i></span>
+              <h2>Publicação na Vercel</h2>
+              <ol class="lista-publicacao">
+                <li>Crie um banco gratuito no Neon e copie a <em>connection string</em> (pooled);</li>
+                <li>Hospede o projeto no GitHub e importe o repositório na Vercel;</li>
+                <li>Em <em>Settings → Environment Variables</em>, cadastre <code>DATABASE_URL</code>;</li>
+                <li>Faça o deploy — o schema da tabela é criado automaticamente na primeira requisição;</li>
+                <li>Verifique o selo “Banco conectado” no cabeçalho e teste o CRUD completo.</li>
+              </ol>
+              <p class="sobre-nota">
+                O guia completo, com alternativas de banco, variáveis de ambiente e checklist de testes pós-deploy,
+                está documentado no arquivo <code>README.md</code> do projeto.
+              </p>
+            </div>
+
+          </article>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Botão flutuante (mobile) -->
+  <button class="fab" id="botao-fab" aria-label="Novo cadastro">
+    <i data-lucide="plus"></i>
+  </button>
+
+  <!-- ============ MODAL: CRIAR / EDITAR ============ -->
+  <div class="modal-overlay" id="modal-formulario" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-form">
+      <div class="modal-cabecalho">
+        <div>
+          <h2 id="titulo-modal-form">Novo cadastro</h2>
+          <p id="subtitulo-modal-form">Preencha os dados do registro. O e-mail deve ser único.</p>
+        </div>
+        <button class="icone-botao" data-fechar-modal aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <form id="formulario-cadastro" novalidate>
+        <div class="campo">
+          <label for="campo-nome">Nome completo</label>
+          <div class="campo-entrada">
+            <i data-lucide="user"></i>
+            <input id="campo-nome" name="nome" type="text" placeholder="Ex.: Maria da Silva" autocomplete="name" maxlength="120">
+          </div>
+          <p class="erro-campo" id="erro-nome" hidden></p>
+        </div>
+
+        <div class="campo">
+          <label for="campo-email">E-mail</label>
+          <div class="campo-entrada">
+            <i data-lucide="mail"></i>
+            <input id="campo-email" name="email" type="email" placeholder="pessoa@dominio.com" autocomplete="email" maxlength="254">
+          </div>
+          <p class="erro-campo" id="erro-email" hidden></p>
+        </div>
+
+        <div class="grade-dois-campos">
+          <div class="campo">
+            <label for="campo-telefone">Telefone</label>
+            <div class="campo-entrada">
+              <i data-lucide="phone"></i>
+              <input id="campo-telefone" name="telefone" type="tel" placeholder="(11) 98765-4321" autocomplete="tel-national" inputmode="numeric" maxlength="15">
+            </div>
+            <p class="erro-campo" id="erro-telefone" hidden></p>
+          </div>
+
+          <div class="campo">
+            <label for="campo-cidade">Cidade</label>
+            <div class="campo-entrada">
+              <i data-lucide="map-pin"></i>
+              <input id="campo-cidade" name="cidade" type="text" placeholder="Ex.: São Paulo" autocomplete="address-level2" maxlength="80">
+            </div>
+            <p class="erro-campo" id="erro-cidade" hidden></p>
+          </div>
+        </div>
+
+        <div class="modal-rodape">
+          <button type="button" class="botao botao-fantasma" data-fechar-modal>Cancelar</button>
+          <button type="submit" class="botao botao-primario" id="botao-salvar">
+            <span class="spinner" id="spinner-salvar" hidden></span>
+            <span id="texto-botao-salvar">Salvar cadastro</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: DETALHES ============ -->
+  <div class="modal-overlay" id="modal-detalhes" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-detalhes">
+      <div class="modal-cabecalho">
+        <div>
+          <h2 id="titulo-modal-detalhes">Detalhes do cadastro</h2>
+          <p>Todos os dados armazenados no banco para este registro</p>
+        </div>
+        <button class="icone-botao" data-fechar-modal aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-corpo detalhes-corpo">
+        <div class="detalhes-identidade">
+          <span class="avatar avatar-grande" id="detalhes-avatar">—</span>
+          <div>
+            <h3 id="detalhes-nome">—</h3>
+            <p id="detalhes-email">—</p>
+          </div>
+        </div>
+
+        <dl class="detalhes-grade">
+          <div>
+            <dt><i data-lucide="hash"></i> ID do registro</dt>
+            <dd class="detalhes-id">
+              <code id="detalhes-id">—</code>
+              <button type="button" class="icone-botao botao-pequeno" id="botao-copiar-id" title="Copiar ID" aria-label="Copiar ID">
+                <i data-lucide="copy"></i>
+              </button>
+            </dd>
+          </div>
+          <div>
+            <dt><i data-lucide="phone"></i> Telefone</dt>
+            <dd id="detalhes-telefone">—</dd>
+          </div>
+          <div>
+            <dt><i data-lucide="map-pin"></i> Cidade</dt>
+            <dd id="detalhes-cidade">—</dd>
+          </div>
+          <div>
+            <dt><i data-lucide="calendar"></i> Data de cadastro</dt>
+            <dd id="detalhes-data">—</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="modal-rodape">
+        <button type="button" class="botao botao-fantasma" data-fechar-modal>Fechar</button>
+        <button type="button" class="botao botao-primario" id="botao-editar-detalhes">
+          <i data-lucide="pencil"></i> Editar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: EXCLUIR ============ -->
+  <div class="modal-overlay" id="modal-excluir" hidden>
+    <div class="modal modal-estreito" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-excluir">
+      <div class="modal-cabecalho">
+        <div class="modal-titulo-perigo">
+          <span class="icone-perigo"><i data-lucide="triangle-alert"></i></span>
+          <div>
+            <h2 id="titulo-modal-excluir">Excluir cadastro</h2>
+            <p>Esta ação é permanente e não pode ser desfeita.</p>
+          </div>
+        </div>
+        <button class="icone-botao" data-fechar-modal aria-label="Fechar modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-corpo">
+        <p class="texto-excluir">
+          Você está prestes a excluir definitivamente o cadastro de
+          <strong id="excluir-nome">—</strong>. Todas as informações deste registro
+          serão removidas do banco de dados.
+        </p>
+      </div>
+
+      <div class="modal-rodape">
+        <button type="button" class="botao botao-fantasma" data-fechar-modal>Cancelar</button>
+        <button type="button" class="botao botao-perigo" id="botao-confirmar-exclusao">
+          <span class="spinner" id="spinner-excluir" hidden></span>
+          <span>Excluir definitivamente</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificações (toasts) -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/lucide@0.525.0/dist/umd/lucide.min.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
